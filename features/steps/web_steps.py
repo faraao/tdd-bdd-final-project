@@ -104,7 +104,54 @@ def step_impl(context, element_name):
 # to get the element id of any button
 ##################################################################
 
-## UPDATE CODE HERE ##
+##################################################################
+# Aksi Menekan Tombol (Press Button)
+##################################################################
+@when('I press the "{button}" button')
+def step_impl(context, button):
+    element_id = button.lower() + '-btn'
+    try:
+        # Coba klik dengan ID standar
+        element = WebDriverWait(context.driver, context.wait_seconds).until(
+            expected_conditions.presence_of_element_located((By.ID, element_id))
+        )
+        # Pastikan terlihat (scroll ke elemen tersebut)
+        context.driver.execute_script("arguments[0].scrollIntoView();", element)
+        element.click()
+    except:
+        # Jika gagal, cari lewat teks tombol (case insensitive)
+        element = context.driver.find_element(By.XPATH, f"//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{button.lower()}')]")
+        context.driver.execute_script("arguments[0].click();", element)
+
+##################################################################
+# Verifikasi Pesan Flash (Success/Error)
+##################################################################
+@then('I should see the message "{message}"')
+def step_impl(context, message):
+    # Kita tunggu elemen flash_message sampai mengandung teks yang kita mau
+    # Jika perlu, kita beri waktu tunggu yang sedikit lebih lama
+    WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, 'flash_message'), message
+        )
+    )
+
+##################################################################
+# Verifikasi Hasil di Tabel (Results Table)
+##################################################################
+@then('I should see "{name}" in the results')
+def step_impl(context, name):
+    found = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, 'search_results'), name
+        )
+    )
+    assert(found)
+
+@then('I should not see "{name}" in the results')
+def step_impl(context, name):
+    element = context.driver.find_element(By.ID, 'search_results')
+    assert(name not in element.text)
 
 ##################################################################
 # This code works because of the following naming convention:
